@@ -1,0 +1,80 @@
+-- =====================================================
+-- Минимальная база данных для веб-приложения "Я буду кушац"
+-- Система бронирования столиков в ресторане
+-- =====================================================
+-- ВНИМАНИЕ: Данный файл предназначен для запуска на PostgreSQL
+-- Из-за различий в СУБД, возможно, потребуется внести изменения
+-- для запуска без ошибок в других системах (MS SQL Server, MySQL, SQLite, Oracle и других)
+-- 
+-- Вы можете использовать эту базу данных как основу или создать
+-- собственную структуру базы данных, подходящую для вашего проекта
+-- =====================================================
+
+-- Удаление существующих таблиц (если они есть)
+DROP TABLE IF EXISTS reviews CASCADE;
+DROP TABLE IF EXISTS bookings CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+-- =====================================================
+-- Таблица пользователей
+-- =====================================================
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    login VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    is_admin BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =====================================================
+-- Таблица бронирований
+-- =====================================================
+CREATE TABLE bookings (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    booking_date DATE NOT NULL,
+    booking_time TIME NOT NULL,
+    guests_count INTEGER NOT NULL,
+    contact_phone VARCHAR(20) NOT NULL,
+    status VARCHAR(20) DEFAULT 'Новое',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =====================================================
+-- Таблица отзывов
+-- =====================================================
+CREATE TABLE reviews (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    booking_id INTEGER NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+    rating INTEGER NOT NULL,
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+-- =====================================================
+-- Тестовые данные
+-- =====================================================
+
+-- Администратор
+INSERT INTO users (login, password, first_name, last_name, phone, email, is_admin) 
+VALUES ('admin123', 'restaurant', 'Администратор', 'Системы', '+7(999)-999-99-99', 'admin@restaurant.ru', TRUE);
+
+-- Тестовый пользователь
+INSERT INTO users (login, password, first_name, last_name, phone, email) VALUES
+('иванов123', 'password123', 'Иван', 'Иванов', '+7(901)-123-45-67', 'ivan.ivanov@email.ru');
+
+-- Тестовые бронирования
+INSERT INTO bookings (user_id, booking_date, booking_time, guests_count, contact_phone, status) VALUES
+(2, '2024-01-15', '19:00', 2, '+7(901)-123-45-67', 'Новое'),
+(2, '2024-01-10', '18:30', 4, '+7(901)-123-45-67', 'Посещение состоялось');
+
+-- Тестовый отзыв
+INSERT INTO reviews (user_id, booking_id, rating, comment) VALUES
+(2, 2, 5, 'Отличный сервис!');
